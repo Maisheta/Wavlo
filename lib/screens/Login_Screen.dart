@@ -38,7 +38,6 @@ class _Login_ScreenState extends State<Login_Screen> {
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         final token = decoded['token'];
-        print("🔥 TOKEN: $token");
 
         Navigator.pushReplacement(
           context,
@@ -164,9 +163,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => Account_Screen(),
-                        ),
+                        MaterialPageRoute(builder: (context) => ChatList()),
                       );
                     },
                     child: const Text(
