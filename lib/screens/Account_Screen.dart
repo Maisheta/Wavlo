@@ -1,80 +1,87 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart';
+import 'package:chat/screens/verify_screen.dart';
 import '../components/Orange_Circle.dart';
 import '../components/TextField.dart';
-import 'Home_screen.dart';
 
-class Account_Screen extends StatefulWidget {
-  const Account_Screen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
-  State<Account_Screen> createState() => _Account_ScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _Account_ScreenState extends State<Account_Screen> {
-  String firstName = '';
-  String lastName = '';
-  String email = '';
-  String password = '';
-  String confirmPassword = '';
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
-  Future<void> register() async {
-    if (password != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Passwords do not match")));
-      return;
+  File? selectedImage;
+
+  Future<void> pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        selectedImage = File(picked.path);
+      });
+    }
+  }
+
+  Future<void> register(BuildContext context) async {
+    final url = Uri.parse('https://wavlo.azurewebsites.net/api/auth/register');
+
+    final request = http.MultipartRequest('POST', url);
+
+    request.fields['FirstName'] = firstNameController.text.trim();
+    request.fields['LastName'] = lastNameController.text.trim();
+    request.fields['Email'] = emailController.text.trim();
+    request.fields['Password'] = passwordController.text;
+    request.fields['ConfirmPassword'] = confirmPasswordController.text;
+
+    if (selectedImage != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'ProfileImage',
+          selectedImage!.path,
+          filename: basename(selectedImage!.path),
+        ),
+      );
+    } else {
+      request.fields['ProfileImage'] = 'Hey'; // زي ما مكتوب في postman
     }
 
     try {
-      final response = await http.post(
-        Uri.parse('https://wavlo.azurewebsites.net/api/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'password': password,
-          'confirmPassword': confirmPassword,
-          'profileImage': '',
-        }),
-      );
+      final response = await request.send();
+      final respStr = await response.stream.bytesToString();
 
-      print("📡 Status Code: ${response.statusCode}");
-      print(
-        "📥 Body Sent: ${jsonEncode({'firstName': firstName, 'lastName': lastName, 'email': email, 'password': password, 'confirmPassword': confirmPassword, 'profileImage': ''})}",
-      );
-      print("📤 Response Body: ${response.body}");
+      print("📡 Response Code: ${response.statusCode}");
+      print("📨 Response Body: $respStr");
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        final token = responseData['token'];
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', token);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registration successful!")),
-        );
-
-        Navigator.pushReplacement(
+        // بعد النجاح، يتم التوجيه إلى صفحة VerifyScreen
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(
+            builder:
+                (context) => VerifyScreen(email: emailController.text.trim()),
+          ),
         );
       } else {
-        final errorMessage =
-            jsonDecode(response.body)['message'] ?? 'Registration failed';
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❌ $errorMessage")));
+        ).showSnackBar(SnackBar(content: Text("❌ Failed: $respStr")));
       }
     } catch (e) {
-      print("❌ Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error connecting to server")),
-      );
+      print("❌ Exception: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong!")));
     }
   }
 
@@ -94,6 +101,7 @@ class _Account_ScreenState extends State<Account_Screen> {
                   alignment: Alignment.center,
                   child: Text(
                     "Create Account",
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -101,36 +109,66 @@ class _Account_ScreenState extends State<Account_Screen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 10),
+                const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Create your account and stay connected with\nwho matters",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 50),
                 CustomTextField(
+                  controller: firstNameController,
                   label: "First Name",
-                  onChanged: (value) => setState(() => firstName = value),
+                  onChanged: (value) {
+                    print("First name is: $value");
+                  },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 CustomTextField(
+                  controller: lastNameController,
                   label: "Last Name",
-                  onChanged: (value) => setState(() => lastName = value),
+                  onChanged: (value) {
+                    print("Last name is: $value");
+                  },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 CustomTextField(
+                  controller: emailController,
                   label: "Email",
-                  onChanged: (value) => setState(() => email = value),
+                  onChanged: (value) {
+                    print("Email is: $value");
+                  },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 CustomTextField(
+                  controller: passwordController,
                   label: "Password",
                   isPassword: true,
-                  onChanged: (value) => setState(() => password = value),
+                  onChanged: (value) {
+                    print("Password is: $value");
+                  },
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 CustomTextField(
+                  controller: confirmPasswordController,
                   label: "Confirm Password",
                   isPassword: true,
-                  onChanged: (value) => setState(() => confirmPassword = value),
+                  onChanged: (value) {
+                    print("Confirm password is: $value");
+                  },
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 50),
                 ElevatedButton(
-                  onPressed: register,
+                  onPressed: () {
+                    register(context);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xffF37C50),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -140,10 +178,21 @@ class _Account_ScreenState extends State<Account_Screen> {
                     ),
                   ),
                   child: const Text(
-                    "Sign up",
+                    "Sign Up",
                     style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
+                const SizedBox(height: 20),
+                Center(
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      "Already have an account",
+                      style: TextStyle(color: Colors.black87, fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
