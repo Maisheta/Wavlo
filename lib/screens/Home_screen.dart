@@ -59,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen>
         fontWeight: FontWeight.bold,
       ),
     );
-    SizedBox(height: 10);
   }
 
   PreferredSize buildTabBar() {
@@ -133,100 +132,28 @@ class ChatList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chats = [
-      {
-        'name': 'Jerome Bell',
-        'company': 'The Walt Disney Company',
-        'time': '2:18 PM',
-        'unread': '2',
-        'image': 'https://randomuser.me/api/portraits/men/1.jpg',
-      },
-      {
-        'name': 'Cody Fisher',
-        'company': 'Starbucks',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/women/2.jpg',
-      },
-      {
-        'name': 'Arlene McCoy',
-        'company': 'Gillette',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/men/3.jpg',
-      },
-      {
-        'name': 'Jenny Wilson',
-        'company': 'McDonald\'s',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/women/4.jpg',
-      },
-      {
-        'name': 'Bessie Cooper',
-        'company': 'Mitsubishi',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/women/5.jpg',
-      },
-      {
-        'name': 'Cameron Williamson',
-        'company': 'Bank of America',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/men/6.jpg',
-      },
-      {
-        'name': 'Leslie Alexander',
-        'company': 'IBM',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/men/7.jpg',
-      },
-      {
-        'name': 'Leslie Alexander',
-        'company': 'Mitsubishi',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/women/8.jpg',
-      },
-      {
-        'name': 'Leslie Alexander',
-        'company': 'See you Tomorrow',
-        'time': '2:18 PM',
-        'image': 'https://randomuser.me/api/portraits/women/9.jpg',
-      },
-    ];
-
-    return ListView.builder(
-      itemCount: chats.length,
-      itemBuilder: (context, index) {
-        final chat = chats[index];
-        return ListTile(
-          leading: CircleAvatar(
-            radius: 30,
-            backgroundImage: NetworkImage(chat['image']!),
-          ),
-          title: Text(chat['name']!),
-          subtitle: Text(chat['company']!),
-          trailing: buildTrailing(chat),
-        );
-      },
-    );
-  }
-
-  Widget buildTrailing(Map<String, String> chat) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(chat['time']!),
-        if (chat.containsKey('unread'))
-          Container(
-            margin: const EdgeInsets.only(top: 4),
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.message_outlined, size: 80, color: Color(0xffF37C50)),
+          const SizedBox(height: 20),
+          Text(
+            "Start a New Chat",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
               color: Color(0xffF37C50),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              chat['unread']!,
-              style: const TextStyle(fontSize: 12, color: Colors.white),
             ),
           ),
-      ],
+          const SizedBox(height: 10),
+          Text(
+            "You can start a conversation with anyone here.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.black54),
+          ),
+        ],
+      ),
     );
   }
 }
