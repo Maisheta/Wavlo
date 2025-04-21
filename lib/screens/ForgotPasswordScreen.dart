@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:chat/screens/ResetPasswordScreen.dart';
+import '../components/Orange_Circle.dart';
+import '../components/TextField.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -30,9 +32,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         body: jsonEncode({"email": email}),
       );
 
-      print("🔁 Status: ${response.statusCode}");
-      print("💬 Response: ${response.body}");
-
       if (response.statusCode == 200) {
         Navigator.push(
           context,
@@ -40,15 +39,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             builder: (context) => ResetPasswordScreen(email: email),
           ),
         );
-
-        // تقدر هنا تبعت المستخدم لصفحة كتابة الكود والباسورد الجديد لو عايز.
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("❌ Failed to send reset code")),
         );
       }
     } catch (e) {
-      print("Error sending reset request: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("⚠️ Error sending request")));
@@ -58,35 +54,71 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Reset Password")),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const Text(
-              "Enter your email and we’ll send you a password reset code.",
-              style: TextStyle(fontSize: 16),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          const OrangeCircleDecoration(), // نفس الديكور اللي في شاشة Login
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: ListView(
+              children: [
+                const SizedBox(height: 80),
+                const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Forgot Password",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xffF37C50),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Enter your email and we’ll send you a password reset code.",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 50),
+
+                // Email Input
+                CustomTextField(
+                  label: "Email",
+                  onChanged: (value) {
+                    emailController.text = value;
+                  },
+                ),
+
+                const SizedBox(height: 30),
+
+                // Send Reset Code button
+                ElevatedButton(
+                  onPressed: sendResetCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xffF37C50),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Send Reset Code",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: "Email",
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: sendResetCode,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffF37C50),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text("Send Reset Code"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
