@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../components/Orange_Circle.dart';
+import '../components/TextField.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String email;
@@ -48,9 +50,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         }),
       );
 
-      print("🛠️ Reset Status: ${response.statusCode}");
-      print("! Response Body: ${response.body}");
-
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Password reset successful!")),
@@ -62,7 +61,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         );
       }
     } catch (e) {
-      print("Reset error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("⚠️ Error connecting to server")),
       );
@@ -72,53 +70,90 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Reset Password")),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Text(
-              "Enter the code sent to ${widget.email} and your new password.",
-              style: const TextStyle(fontSize: 16),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          const OrangeCircleDecoration(), // نفس الـ UI الديكور في شاشة Login
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: ListView(
+              children: [
+                const SizedBox(height: 80),
+                const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Reset Password",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xffF37C50),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Enter the code sent to\n${widget.email} and your new password",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 50),
+
+                // Code
+                CustomTextField(
+                  label: "Reset Code (OTP)",
+                  onChanged: (value) {
+                    codeController.text = value;
+                  },
+                ),
+                const SizedBox(height: 15),
+
+                // New Password
+                CustomTextField(
+                  label: "New Password",
+                  isPassword: true,
+                  onChanged: (value) {
+                    passwordController.text = value;
+                  },
+                ),
+                const SizedBox(height: 15),
+
+                // Confirm Password
+                CustomTextField(
+                  label: "Confirm Password",
+                  isPassword: true,
+                  onChanged: (value) {
+                    confirmPasswordController.text = value;
+                  },
+                ),
+
+                const SizedBox(height: 30),
+
+                ElevatedButton(
+                  onPressed: resetPassword,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xffF37C50),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Reset Password",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: codeController,
-              decoration: const InputDecoration(
-                labelText: "Reset Code (OTP)",
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: passwordController,
-              decoration: const InputDecoration(
-                labelText: "New Password",
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 15),
-            TextField(
-              controller: confirmPasswordController,
-              decoration: const InputDecoration(
-                labelText: "Confirm Password",
-                border: OutlineInputBorder(),
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: resetPassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xffF37C50),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              child: const Text("Reset Password"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
