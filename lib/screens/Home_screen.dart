@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:chat/screens/Status_screen.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:chat/screens/welcome_screen.dart'; // تأكد من أنه لديك شاشة WelcomeScreen
+import 'package:chat/screens/status_screen.dart';
 import 'package:chat/screens/call_screen.dart';
-import 'package:chat/screens/Login_Screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +21,20 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _fabExpanded = !_fabExpanded;
     });
+  }
+
+  // Logout function
+  Future<void> logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // مسح التوكنات وبيانات المستخدم المخزنة
+    await prefs.clear();
+
+    // إعادة المستخدم إلى شاشة الـ Login بعد الخروج
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+    );
   }
 
   @override
@@ -40,19 +57,33 @@ class _HomeScreenState extends State<HomeScreen>
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
       title: buildTitle(),
-      actions: const [
-        Icon(Icons.search, color: Color(0xffF37C50)),
-        SizedBox(width: 10),
-        Icon(Icons.more_vert, color: Color(0xffF37C50)),
-        SizedBox(width: 10),
+      actions: [
+        const Icon(Icons.search, color: Color(0xffF37C50)),
+        const SizedBox(width: 10),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Color(0xffF37C50)),
+          onSelected: (value) {
+            if (value == 'logout') {
+              logout(context); // استدعاء وظيفة الـ logout
+            }
+          },
+          itemBuilder:
+              (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'logout',
+                  child: Text('Logout'),
+                ),
+              ],
+        ),
+        const SizedBox(width: 10),
       ],
       bottom: buildTabBar(),
     );
   }
 
   Text buildTitle() {
-    return Text(
-      "WAVLO",
+    return const Text(
+      "Wavlo",
       style: TextStyle(
         fontSize: 22,
         color: Color(0xffF37C50),
@@ -104,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen>
           const SizedBox(height: 16),
         ],
         FloatingActionButton(
-          backgroundColor: Color(0xffF37C50),
+          backgroundColor: const Color(0xffF37C50),
           onPressed: toggleFab,
           shape: const CircleBorder(),
           child: Icon(
@@ -120,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen>
     return FloatingActionButton(
       heroTag: heroTag,
       mini: true,
-      backgroundColor: Color(0xffF37C50),
+      backgroundColor: const Color(0xffF37C50),
       onPressed: () {},
       child: Icon(icon, color: Colors.white),
     );
