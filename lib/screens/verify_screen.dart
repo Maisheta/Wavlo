@@ -1,14 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:chat/screens/Home_screen.dart';
-import '../components/Orange_Circle.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:http/http.dart' as http;
+import '../components/Orange_Circle.dart';
 
 class VerifyScreen extends StatefulWidget {
   final String email;
 
-  const VerifyScreen({Key? key, required this.email}) : super(key: key);
+  const VerifyScreen({super.key, required this.email});
 
   @override
   State<VerifyScreen> createState() => VerifyScreenState();
@@ -18,37 +17,70 @@ class VerifyScreenState extends State<VerifyScreen> {
   String otp = '';
   TextEditingController otpController = TextEditingController();
 
-  Future<void> verifyOtpFromApi() async {
+  Future<void> verifyOtp() async {
+    if (otp.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid 6-digit OTP")),
+      );
+      return;
+    }
+
     final url = Uri.parse(
       "https://wavlo.azurewebsites.net/api/auth/validate-otp",
     );
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: '{"email": "${widget.email}", "otp": "$otp"}',
-    );
-
-    print("🔐 Sent OTP: $otp for ${widget.email}");
-    print("📡 Response: ${response.statusCode} - ${response.body}");
-
-    if (response.statusCode == 200) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: '{"email": "${widget.email}", "otp": "$otp"}',
       );
-    } else {
+
+      if (response.statusCode == 200) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("❌ Invalid OTP")));
+      }
+    } catch (e) {
+      print("OTP verification error: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❌ Invalid OTP")));
+      ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
     }
   }
 
-  void resetOtp() {
-    setState(() {
-      otp = '';
-      otpController.clear();
-    });
+  Future<void> resendOtp() async {
+    final url = Uri.parse(
+      "https://wavlo.azurewebsites.net/api/auth/resend-otp",
+    );
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: '{"email": "${widget.email}"}',
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ OTP re-sent successfully")),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("❌ Failed to resend OTP")));
+      }
+    } catch (e) {
+      print("Resend error: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("⚠️ Error resending OTP")));
+    }
   }
 
   @override
@@ -97,7 +129,7 @@ class VerifyScreenState extends State<VerifyScreen> {
                 PinCodeTextField(
                   appContext: context,
                   controller: otpController,
-                  length: 6, // تغيير من 4 إلى 6
+                  length: 6,
                   obscureText: true,
                   animationType: AnimationType.fade,
                   keyboardType: TextInputType.number,
@@ -109,8 +141,10 @@ class VerifyScreenState extends State<VerifyScreen> {
                     fieldHeight: 65,
                     fieldWidth: 45,
                     inactiveColor: Colors.grey,
-                    inactiveFillColor: Color(0xffF37C50).withOpacity(0.08),
-                    selectedColor: Color(0xffF37C50),
+                    inactiveFillColor: const Color(
+                      0xffF37C50,
+                    ).withOpacity(0.08),
+                    selectedColor: const Color(0xffF37C50),
                     selectedFillColor: Colors.white,
                     activeFillColor: Colors.white,
                   ),
@@ -123,19 +157,9 @@ class VerifyScreenState extends State<VerifyScreen> {
                     otp = value;
                   },
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 40),
                 ElevatedButton(
-                  onPressed: () {
-                    if (otp.length == 6) {
-                      verifyOtpFromApi();
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please enter a valid 6-digit OTP"),
-                        ),
-                      );
-                    }
-                  },
+                  onPressed: verifyOtp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xffF37C50),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -152,9 +176,9 @@ class VerifyScreenState extends State<VerifyScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: TextButton(
-                    onPressed: resetOtp,
+                    onPressed: resendOtp,
                     child: RichText(
-                      text: TextSpan(
+                      text: const TextSpan(
                         children: [
                           TextSpan(
                             text: "Didn't receive code? ",
