@@ -5,8 +5,9 @@ import 'package:chat/screens/Home_screen.dart';
 import '../components/Orange_Circle.dart';
 import '../components/TextField.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:chat/screens/ForgotPasswordScreen.dart';
 import 'ChatsListScreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login_Screen extends StatefulWidget {
   const Login_Screen({super.key});
@@ -35,9 +36,16 @@ class _Login_ScreenState extends State<Login_Screen> {
       );
       print("📤 Response Body: ${response.body}");
 
+      // Login response sample
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         final token = decoded['token'];
+        final refreshToken = decoded['refreshToken'];
+
+        // 🧠 Save tokens locally
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', decoded['token']);
+        await prefs.setString('refreshToken', decoded['refreshToken']);
 
         Navigator.pushReplacement(
           context,
@@ -123,7 +131,15 @@ class _Login_ScreenState extends State<Login_Screen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+
                     child: const Text(
                       "Forgot your password?",
                       style: TextStyle(
