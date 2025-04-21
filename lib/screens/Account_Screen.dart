@@ -6,6 +6,7 @@ import 'package:path/path.dart';
 import 'package:chat/screens/verify_screen.dart';
 import '../components/Orange_Circle.dart';
 import '../components/TextField.dart';
+import 'package:chat/screens/Login_Screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -122,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 45),
                 CustomTextField(
                   controller: firstNameController,
                   label: "First Name",
@@ -185,7 +186,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const Login_Screen(),
+                          ),
+                        );
+                      }
+                      ;
+                    },
                     child: const Text(
                       "Already have an account",
                       style: TextStyle(color: Colors.black87, fontSize: 16),
