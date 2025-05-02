@@ -5,11 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chat/screens/status_screen.dart';
 import 'package:chat/screens/call_screen.dart';
 import 'package:chat/screens/welcome_screen.dart';
+import 'package:chat/screens/Login_Screen.dart';
+import 'package:chat/screens/SettingsScreen.dart';
+import 'package:chat/screens/UsersListScreen.dart';
 
 class ChatsListScreen extends StatefulWidget {
-  final String token;
-
-  const ChatsListScreen({super.key, required this.token});
+  const ChatsListScreen({super.key});
 
   @override
   State<ChatsListScreen> createState() => _ChatsListScreenState();
@@ -19,20 +20,43 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   List<dynamic> chats = [];
   bool isLoading = true;
   bool _fabExpanded = false;
+  String? token;
 
   @override
   void initState() {
     super.initState();
-    fetchChats();
+    loadTokenAndFetchChats();
+  }
+
+  Future<void> loadTokenAndFetchChats() async {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+
+    if (token == null) {
+      print("❗ No token found");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No token found. Please login again.")),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+          (route) => false,
+        );
+      }
+    } else {
+      fetchChats();
+    }
   }
 
   Future<void> fetchChats() async {
     final url = Uri.parse("https://wavlo.azurewebsites.net/api/chat/chats");
+
     final response = await http.get(
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${widget.token}',
+        'Authorization': 'Bearer $token',
       },
     );
 
@@ -56,50 +80,61 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
 
   Future<void> logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    final refreshToken = prefs.getString('refreshToken');
+    final token = prefs.getString('token');
+    final refreshToken = prefs.getString('refresh_token');
 
-    print("🪪 Refresh Token: $refreshToken");
+    print("📤 Sending logout request...");
+    print("🪪 Access Token: $token");
+    print("🔄 Refresh Token: $refreshToken");
 
-    if (refreshToken == null || refreshToken.isEmpty) {
+    if (token == null ||
+        token.isEmpty ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
+      print("❗ Token is missing");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Refresh token is missing.")),
+        const SnackBar(content: Text("No token found, please login first")),
       );
       return;
     }
 
     try {
-      // إرسال الـ refreshToken في الـ body
       final response = await http.post(
         Uri.parse('https://wavlo.azurewebsites.net/api/auth/logout'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'refreshToken': refreshToken, // إرسال التوكن في الـ body
-        }),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'refresh_token': refreshToken}),
       );
 
-      print("🔌 Logout status: ${response.statusCode}");
-      print("🧾 Logout body: ${response.body}");
+      print("📡 Logout Status Code: ${response.statusCode}");
+      print("📥 Logout Response: ${response.body}");
 
-      // مسح الكوكي بعد الـ logout
-      await prefs.clear();
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-        (route) => false,
-      );
+      if (response.statusCode == 200) {
+        await prefs.clear();
+        print("✅ Logout successful, token cleared");
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+          (route) => false,
+        );
+      } else {
+        print("❌ Logout failed: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Logout failed: ${response.statusCode} - ${response.body}",
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      print("❗Logout Error: $e");
+      print("❗ Logout exception: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("⚠️ Error logging out.")));
+      ).showSnackBar(const SnackBar(content: Text("Logout error occurred")));
     }
-  }
-
-  void toggleFab() {
-    setState(() {
-      _fabExpanded = !_fabExpanded;
-    });
   }
 
   @override
@@ -132,21 +167,56 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
       actions: [
         const Icon(Icons.search, color: Color(0xffF37C50)),
         const SizedBox(width: 10),
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Color(0xffF37C50)),
-          onSelected: (value) {
-            if (value == 'logout') {
-              logout(context);
-            }
-          },
-          itemBuilder:
-              (BuildContext context) => [
-                const PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Text('Logout'),
-                ),
-              ],
+        Theme(
+          data: ThemeData(
+            popupMenuTheme: PopupMenuThemeData(color: Colors.white),
+          ),
+          child: PopupMenuButton<String>(
+            offset: const Offset(-18, 40),
+            icon: const Icon(Icons.more_vert, color: Color(0xffF37C50)),
+            onSelected: (value) {
+              switch (value) {
+                case 'profile':
+                  print("🧑‍💼 Profile selected");
+                  break;
+                case 'Starred message':
+                  print("❓ Help selected");
+                  break;
+                case 'help':
+                  print("❓ Help selected");
+                  break;
+                case 'Setting':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                  break;
+              }
+            },
+            itemBuilder:
+                (BuildContext context) => [
+                  const PopupMenuItem<String>(
+                    value: 'profile',
+                    child: Text('Profile'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Starred message',
+                    child: Text('Starred message'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'help',
+                    child: Text('Help'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'Setting',
+                    child: Text('Setting'),
+                  ),
+                ],
+          ),
         ),
+
         const SizedBox(width: 10),
       ],
       bottom: buildTabBar(),
@@ -160,6 +230,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
         fontSize: 22,
         color: Color(0xffF37C50),
         fontWeight: FontWeight.bold,
+        fontFamily: "ADLaMDisplay",
       ),
     );
   }
@@ -170,7 +241,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: Color(0xFFF2F2F2),
           borderRadius: BorderRadius.circular(30),
         ),
         child: TabBar(
@@ -179,7 +250,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
             fontWeight: FontWeight.w500,
           ),
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.black87,
+          unselectedLabelColor: Colors.grey,
           indicator: BoxDecoration(
             color: Color(0xffF37C50),
             borderRadius: BorderRadius.circular(30),
@@ -211,7 +282,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
           subtitle: Text(chat['company'] ?? "Company Name"),
           trailing: buildTrailing(chat),
           onTap: () {
-            // Add navigation to chat screen here if needed
+            // Navigate to chat screen
           },
         );
       },
@@ -246,9 +317,16 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (_fabExpanded) ...[
-          buildMiniFab(Icons.person_add, 'fab1'),
-          buildMiniFab(Icons.group, 'fab2'),
-          buildMiniFab(Icons.add, 'fab3'),
+          buildMiniFab(Icons.person_add, 'fab1', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => UsersListScreen(token: token!),
+              ),
+            );
+          }),
+          buildMiniFab(Icons.group, 'fab2', () {}),
+          buildMiniFab(Icons.add, 'fab3', () {}),
           const SizedBox(height: 16),
         ],
         FloatingActionButton(
@@ -264,13 +342,23 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
     );
   }
 
-  FloatingActionButton buildMiniFab(IconData icon, String heroTag) {
+  FloatingActionButton buildMiniFab(
+    IconData icon,
+    String heroTag, [
+    VoidCallback? onPressed,
+  ]) {
     return FloatingActionButton(
       heroTag: heroTag,
       mini: true,
       backgroundColor: const Color(0xffF37C50),
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       child: Icon(icon, color: Colors.white),
     );
+  }
+
+  void toggleFab() {
+    setState(() {
+      _fabExpanded = !_fabExpanded;
+    });
   }
 }
