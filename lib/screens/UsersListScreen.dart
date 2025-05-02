@@ -2,23 +2,22 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class UsersScreen extends StatefulWidget {
+class UsersListScreen extends StatefulWidget {
   final String token;
 
-  const UsersScreen({super.key, required this.token});
+  const UsersListScreen({super.key, required this.token});
 
   @override
-  State<UsersScreen> createState() => _UsersScreenState();
+  State<UsersListScreen> createState() => _UsersListScreenState();
 }
 
-class _UsersScreenState extends State<UsersScreen> {
+class _UsersListScreenState extends State<UsersListScreen> {
   List<dynamic> users = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    print("🟡 TOKEN in UsersScreen: ${widget.token}");
     fetchUsers();
   }
 
@@ -34,26 +33,32 @@ class _UsersScreenState extends State<UsersScreen> {
         },
       );
 
-      print("📩 Status Code: ${response.statusCode}");
-      print("📩 Body: ${response.body}");
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
         setState(() {
-          users = data;
+          users = jsonDecode(response.body);
           isLoading = false;
         });
       } else {
+        print("❌ Failed to load users: ${response.body}");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to load users")));
         setState(() {
           isLoading = false;
         });
-        print("❌ Failed to fetch users");
       }
     } catch (e) {
-      print("🔥 Error: $e");
-      setState(() {
-        isLoading = false;
-      });
+      print("❗ Error fetching users: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Error fetching users")));
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -61,26 +66,35 @@ class _UsersScreenState extends State<UsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("All Users"),
-        backgroundColor: const Color(0xffF37C50),
+        backgroundColor: Colors.white,
+        title: const Text(
+          "Registered Users",
+          style: TextStyle(
+            fontSize: 22,
+            color: Color(0xffF37C50),
+            fontWeight: FontWeight.bold,
+            fontFamily: "ADLaMDisplay",
+          ),
+        ),
       ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : users.isEmpty
-              ? const Center(child: Text("مفيش مستخدمين لعرضهم"))
+              ? const Center(child: Text("No users found"))
               : ListView.builder(
                 itemCount: users.length,
                 itemBuilder: (context, index) {
                   final user = users[index];
                   return ListTile(
                     leading: const CircleAvatar(
+                      radius: 30,
                       backgroundImage: NetworkImage(
                         'https://randomuser.me/api/portraits/men/1.jpg',
                       ),
                     ),
-                    title: Text(user['name'] ?? 'No Name'),
-                    subtitle: Text(user['email'] ?? 'No Email'),
+                    title: Text(user['name'] ?? "Unknown User"),
+                    subtitle: Text(user['email'] ?? "No email"),
                   );
                 },
               ),
