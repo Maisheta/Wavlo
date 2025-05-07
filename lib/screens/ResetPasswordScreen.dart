@@ -19,6 +19,36 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  // Function to validate OTP
+  Future<bool> validateOtp(String code) async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://wavlo.azurewebsites.net/api/Auth/validate-otp'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": widget.email, "otp": code}),
+      );
+
+      debugPrint("Validate OTP response: ${response.statusCode}");
+      debugPrint("Validate OTP body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ ${response.body}")));
+        return false;
+      }
+    } catch (e) {
+      debugPrint("OTP validation error: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("⚠️ Error validating OTP")));
+      return false;
+    }
+  }
+
+  // Function to reset the password
   Future<void> resetPassword() async {
     final code = codeController.text.trim();
     final password = passwordController.text.trim();
@@ -38,9 +68,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       return;
     }
 
+    // ✅ تحقق من صحة الـ OTP
+    final isValidOtp = await validateOtp(code);
+    if (!isValidOtp) return;
+
     try {
       final response = await http.post(
-        Uri.parse('https://wavlo.azurewebsites.net/api/auth/reset-Password'),
+        Uri.parse('https://wavlo.azurewebsites.net/api/Auth/reset-Password'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": widget.email,
@@ -50,17 +84,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         }),
       );
 
+      debugPrint("Reset Password response: ${response.statusCode}");
+      debugPrint("Reset Password body: ${response.body}");
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Password reset successful!")),
         );
         Navigator.popUntil(context, (route) => route.isFirst);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Invalid code or error resetting")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ ${response.body}")));
       }
     } catch (e) {
+      debugPrint("Reset password error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("⚠️ Error connecting to server")),
       );
@@ -73,7 +111,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          const OrangeCircleDecoration(), // نفس الـ UI الديكور في شاشة Login
+          const OrangeCircleDecoration(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: ListView(
