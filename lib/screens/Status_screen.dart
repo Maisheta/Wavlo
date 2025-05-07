@@ -1,38 +1,76 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
-class StatusScreen extends StatelessWidget {
+class StatusScreen extends StatefulWidget {
   const StatusScreen({super.key});
 
-  final List<Map<String, String>> statuses = const [
-    {
-      'name': 'Jerome Bell',
-      'image': 'https://randomuser.me/api/portraits/women/10.jpg',
-    },
-    {
-      'name': 'Cody Fisher',
-      'image': 'https://randomuser.me/api/portraits/men/11.jpg',
-    },
-    {
-      'name': 'Arlene McCoy',
-      'image': 'https://randomuser.me/api/portraits/women/12.jpg',
-    },
-    {
-      'name': 'Jenny Wilson',
-      'image': 'https://randomuser.me/api/portraits/men/13.jpg',
-    },
-    {
-      'name': 'Bessie Cooper',
-      'image': 'https://randomuser.me/api/portraits/women/14.jpg',
-    },
-    {
-      'name': 'Cameron Williamson',
-      'image': 'https://randomuser.me/api/portraits/men/15.jpg',
-    },
-    {
-      'name': 'Leslie Alexander',
-      'image': 'https://randomuser.me/api/portraits/women/16.jpg',
-    },
-  ];
+  @override
+  _StatusScreenState createState() => _StatusScreenState();
+}
+
+class _StatusScreenState extends State<StatusScreen> {
+  List<Map<String, String>> statuses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStories();
+  }
+
+  Future<void> fetchStories() async {
+    final url = Uri.parse("https://wavlo.azurewebsites.net/api/Story/stories");
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> storyData = jsonDecode(response.body);
+
+        setState(() {
+          statuses =
+              storyData.map<Map<String, String>>((story) {
+                final storyMap = story as Map<String, dynamic>;
+                return {
+                  'name': storyMap['name']?.toString() ?? 'No Name',
+                  'image': storyMap['image']?.toString() ?? '',
+                };
+              }).toList();
+        });
+      } else {
+        print("Failed to fetch stories: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching stories: $e");
+    }
+  }
+
+  Future<void> uploadStory() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      final file = File(image.path);
+      final url = Uri.parse("https://wavlo.azurewebsites.net/api/Story/upload");
+
+      var request =
+          http.MultipartRequest('POST', url)
+            ..headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            ..fields['MediaFile'] =
+                await file
+                    .readAsString(); 
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        print("Story uploaded successfully");
+        fetchStories();
+      } else {
+        print("Failed to upload story: ${response.statusCode}");
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,13 +93,20 @@ class StatusScreen extends StatelessWidget {
                   ),
                   CircleAvatar(
                     radius: 10,
-                    backgroundColor:Color(0xffF37C50),
+                    backgroundColor: Color(0xffF37C50),
                     child: const Icon(Icons.add, size: 14, color: Colors.white),
                   ),
                 ],
               ),
-              title: const Text("My Status"),
-              subtitle: const Text("Tap To Add Status"),
+              title: const Text(
+                "My Status",
+                style: TextStyle(fontSize: 19, color: Color(0xFF1B222C)),
+              ),
+              subtitle: const Text(
+                "Tap To Add Status",
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              onTap: uploadStory, 
             ),
             const SizedBox(height: 16),
 
@@ -83,7 +128,7 @@ class StatusScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color:Color(0xffF37C50), width: 3),
+                        border: Border.all(color: Color(0xffF37C50), width: 3),
                       ),
                       child: CircleAvatar(
                         backgroundImage: NetworkImage(status['image']!),
@@ -94,22 +139,10 @@ class StatusScreen extends StatelessWidget {
                   ],
                 ),
               );
-            }),
-            const SizedBox(height: 80), // مساحة للزرار تحت
+            }).toList(),
+            const SizedBox(height: 80), 
           ],
         ),
-        // زرار refresh
-        //   Positioned(
-        //     bottom: 20,
-        //     right: 20,
-        //     child: FloatingActionButton(
-        //       mini: true,
-        //       backgroundColor: Colors.deepOrange,
-        //       onPressed: () {},
-        //       child: const Icon(Icons.refresh, color: Colors.white),
-        //     ),
-        //   ),
-        //
       ],
     );
   }
