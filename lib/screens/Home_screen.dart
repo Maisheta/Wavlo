@@ -6,6 +6,7 @@ import 'package:chat/screens/welcome_screen.dart';
 import 'package:chat/screens/status_screen.dart';
 import 'package:chat/screens/call_screen.dart';
 import 'package:chat/screens/SettingsScreen.dart';
+import 'package:chat/screens/UsersListScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,16 +25,42 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  // Logout function
   Future<void> logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-
     await prefs.clear();
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      );
+    }
+  }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => WelcomeScreen()),
-    );
+  Future<void> navigateToUsersList(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    print(" FAB1 Pressed - Token: $token");
+
+    if (token == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(" Please log in to access users list")),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => WelcomeScreen()),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => UsersListScreen(token: token)),
+      );
+    }
   }
 
   @override
@@ -61,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen>
         const SizedBox(width: 10),
         Theme(
           data: ThemeData(
-            popupMenuTheme: PopupMenuThemeData(color: Colors.white),
+            popupMenuTheme: const PopupMenuThemeData(color: Colors.white),
           ),
           child: PopupMenuButton<String>(
             offset: const Offset(-18, 40),
@@ -69,13 +96,13 @@ class _HomeScreenState extends State<HomeScreen>
             onSelected: (value) {
               switch (value) {
                 case 'profile':
-                  print("🧑‍💼 Profile selected");
+                  print("Profile selected");
                   break;
                 case 'Starred message':
-                  print("❓ Help selected");
+                  print(" Help selected");
                   break;
                 case 'help':
-                  print("❓ Help selected");
+                  print(" Help selected");
                   break;
                 case 'Setting':
                   Navigator.push(
@@ -84,6 +111,9 @@ class _HomeScreenState extends State<HomeScreen>
                       builder: (context) => const SettingsScreen(),
                     ),
                   );
+                  break;
+                case 'logout':
+                  logout(context);
                   break;
               }
             },
@@ -104,6 +134,10 @@ class _HomeScreenState extends State<HomeScreen>
                   const PopupMenuItem<String>(
                     value: 'Setting',
                     child: Text('Setting'),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Text('Logout'),
                   ),
                 ],
           ),
@@ -127,27 +161,20 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   PreferredSize buildTabBar() {
-    return PreferredSize(
-      preferredSize: const Size.fromHeight(68),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(30),
-        ),
+    return const PreferredSize(
+      preferredSize: Size.fromHeight(68),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: TabBar(
-          labelStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           labelColor: Colors.white,
           unselectedLabelColor: Colors.black87,
           indicator: BoxDecoration(
             color: Color(0xffF37C50),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.all(Radius.circular(30)),
           ),
           indicatorSize: TabBarIndicatorSize.tab,
-          tabs: const [
+          tabs: [
             Tab(child: Center(child: Text("All Chats"))),
             Tab(child: Center(child: Text("Status"))),
             Tab(child: Center(child: Text("Call"))),
@@ -163,9 +190,15 @@ class _HomeScreenState extends State<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (_fabExpanded) ...[
-          buildMiniFab(Icons.person_add, 'fab1'),
-          buildMiniFab(Icons.group, 'fab2'),
-          buildMiniFab(Icons.add, 'fab3'),
+          buildMiniFab(Icons.person_add, 'fab1', () {
+            navigateToUsersList(context);
+          }),
+          buildMiniFab(Icons.group, 'fab2', () {
+            print("Group FAB pressed");
+          }),
+          buildMiniFab(Icons.add, 'fab3', () {
+            print("Add FAB pressed");
+          }),
           const SizedBox(height: 16),
         ],
         FloatingActionButton(
@@ -181,12 +214,16 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  FloatingActionButton buildMiniFab(IconData icon, String heroTag) {
+  FloatingActionButton buildMiniFab(
+    IconData icon,
+    String heroTag, [
+    VoidCallback? onPressed,
+  ]) {
     return FloatingActionButton(
       heroTag: heroTag,
       mini: true,
       backgroundColor: const Color(0xffF37C50),
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       child: Icon(icon, color: Colors.white),
     );
   }
@@ -201,9 +238,13 @@ class ChatList extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.message_outlined, size: 80, color: Color(0xffF37C50)),
+          const Icon(
+            Icons.message_outlined,
+            size: 80,
+            color: Color(0xffF37C50),
+          ),
           const SizedBox(height: 20),
-          Text(
+          const Text(
             "Start a New Chat",
             style: TextStyle(
               fontSize: 24,

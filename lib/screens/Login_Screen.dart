@@ -27,28 +27,26 @@ class _Login_ScreenState extends State<Login_Screen> {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://6589-45-244-213-140.ngrok-free.app/api/auth/login'),
+        Uri.parse('https://fe4c-45-244-133-30.ngrok-free.app/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
-      print("📡 Login Status Code: ${response.statusCode}");
-      print("📥 Login Response: ${response.body}");
+      print(" Login Status Code: ${response.statusCode}");
+      print(" Login Response: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("🔍 Parsed Login Response: $data");
+        print(" Parsed Login Response: $data");
 
         final accessToken = data['token'];
         final refreshToken = data['refreshToken'];
         final firstName = data['firstName'] ?? 'unknown';
         final lastName = data['lastName'] ?? 'user';
-        final userId =
-            data['userId'] ??
-            'unknown'; // تأكد انك بتجيب الـ userId من response الـ login
+        final userId = data['userId'] ?? 'unknown';
 
         if (accessToken == null || refreshToken == null) {
-          print("❗ Access or refresh token not found in response");
+          print(" Access or refresh token not found in response");
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Token not found in login response")),
           );
@@ -58,12 +56,12 @@ class _Login_ScreenState extends State<Login_Screen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', accessToken);
         await prefs.setString('refresh_token', refreshToken);
-        await prefs.setString('email', email); // تخزين الـ email
+        await prefs.setString('email', email);
         await prefs.setString('firstName', firstName);
         await prefs.setString('lastName', lastName);
-        await prefs.setString('userId', userId); // تخزين الـ userId
+        await prefs.setString('userId', userId);
         print(
-          "✅ Login successful, tokens and email saved: $accessToken, $refreshToken, $email ,$userId",
+          " Login successful, tokens and email saved: $accessToken, $refreshToken, $email ,$userId",
         );
 
         Navigator.pushReplacement(
@@ -71,13 +69,13 @@ class _Login_ScreenState extends State<Login_Screen> {
           MaterialPageRoute(builder: (context) => const ChatsListScreen()),
         );
       } else {
-        print("❌ Login failed: ${response.statusCode}");
+        print(" Login failed: ${response.statusCode}");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Login failed: ${response.statusCode}")),
         );
       }
     } catch (e) {
-      print("❗ Login exception: $e");
+      print(" Login exception: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Login error occurred")));
@@ -104,7 +102,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xffF37C50),
+                      color: Color(0xfff94e22),
                     ),
                   ),
                 ),
@@ -154,7 +152,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                     child: const Text(
                       "Forgot your password?",
                       style: TextStyle(
-                        color: Color(0xffF37C50),
+                        color: Color(0xfff94e22),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -166,7 +164,7 @@ class _Login_ScreenState extends State<Login_Screen> {
                     login(context, email, password);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffF37C50),
+                    backgroundColor: const Color(0xfff94e22),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(

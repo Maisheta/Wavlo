@@ -23,19 +23,16 @@ class _SplashScreenState extends State<SplashScreen> {
       });
     });
 
-    // نضيف فحص التوكن هنا
     Timer(const Duration(seconds: 4), () async {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
       if (token != null && token.isNotEmpty) {
-        // فيه توكن محفوظ => يروح على الشاشة الرئيسية
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ChatsListScreen()),
         );
       } else {
-        // مفيش توكن => يروح على welcome screen
         Navigator.pushReplacementNamed(context, '/welcome');
       }
     });
@@ -68,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: TextStyle(
                   fontSize: 60,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFF37A40),
+                  color: Color(0xfff94e22),
                   fontFamily: 'ADLaMDisplay',
                   shadows: [Shadow(blurRadius: 30, color: Colors.grey)],
                 ),

@@ -19,12 +19,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
-  // Function to validate OTP
   Future<bool> validateOtp(String code) async {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://6589-45-244-213-140.ngrok-free.app/api/Auth/validate-otp',
+          'https://79e4-45-244-133-30.ngrok-free.app/api/Auth/validate-otp',
         ),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": widget.email, "otp": code}),
@@ -38,19 +37,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❌ ${response.body}")));
+        ).showSnackBar(SnackBar(content: Text(" ${response.body}")));
         return false;
       }
     } catch (e) {
       debugPrint("OTP validation error: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("⚠️ Error validating OTP")));
+      ).showSnackBar(const SnackBar(content: Text(" Error validating OTP")));
       return false;
     }
   }
 
-  // Function to reset the password
   Future<void> resetPassword() async {
     final code = codeController.text.trim();
     final password = passwordController.text.trim();
@@ -59,25 +57,24 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     if (code.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("❗ Please fill all fields")));
+      ).showSnackBar(const SnackBar(content: Text(" Please fill all fields")));
       return;
     }
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("❗ Passwords do not match")));
+      ).showSnackBar(const SnackBar(content: Text(" Passwords do not match")));
       return;
     }
 
-    // ✅ تحقق من صحة الـ OTP
     final isValidOtp = await validateOtp(code);
     if (!isValidOtp) return;
 
     try {
       final response = await http.post(
         Uri.parse(
-          'https://6589-45-244-213-140.ngrok-free.app/api/Auth/reset-Password',
+          'https://fe4c-45-244-133-30.ngrok-free.app/api/Auth/reset-Password',
         ),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
@@ -93,18 +90,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ Password reset successful!")),
+          const SnackBar(content: Text(" Password reset successful!")),
         );
         Navigator.popUntil(context, (route) => route.isFirst);
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❌ ${response.body}")));
+        ).showSnackBar(SnackBar(content: Text(" ${response.body}")));
       }
     } catch (e) {
       debugPrint("Reset password error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Error connecting to server")),
+        const SnackBar(content: Text("️ Error connecting to server")),
       );
     }
   }
@@ -128,7 +125,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xffF37C50),
+                      color: Color(0xfff94e22),
                     ),
                   ),
                 ),
@@ -147,7 +144,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 50),
 
-                // Code
                 CustomTextField(
                   label: "Reset Code (OTP)",
                   onChanged: (value) {
@@ -156,7 +152,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // New Password
                 CustomTextField(
                   label: "New Password",
                   isPassword: true,
@@ -166,7 +161,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ),
                 const SizedBox(height: 15),
 
-                // Confirm Password
                 CustomTextField(
                   label: "Confirm Password",
                   isPassword: true,
@@ -180,7 +174,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 ElevatedButton(
                   onPressed: resetPassword,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffF37C50),
+                    backgroundColor: const Color(0xfff94e22),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(

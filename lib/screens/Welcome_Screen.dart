@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../components/Orange_Circle.dart';
 import 'Login_Screen.dart';
+import 'Account_Screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -21,7 +22,7 @@ class WelcomeScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xffF37C50),
+                    color: Color(0xfff94e22),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -54,7 +55,6 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-// ✅ زرار تسجيل الدخول
 class LoginButton extends StatelessWidget {
   const LoginButton({super.key});
 
@@ -68,7 +68,7 @@ class LoginButton extends StatelessWidget {
         );
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xffF37C50),
+        backgroundColor: const Color(0xfff94e22),
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -80,7 +80,6 @@ class LoginButton extends StatelessWidget {
   }
 }
 
-// ✅ زرار التسجيل
 class RegisterButton extends StatelessWidget {
   const RegisterButton({super.key});
 
@@ -88,7 +87,10 @@ class RegisterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        // الأكشن عند الضغط
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => RegisterScreen()),
+        );
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,

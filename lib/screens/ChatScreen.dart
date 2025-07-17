@@ -19,7 +19,7 @@ class ChatScreen extends StatefulWidget {
   final String lastName;
   final String userImage;
   final String targetUserId;
-  final VoidCallback? onMessageSent; // Callback لتحديث الشاتات
+  final VoidCallback? onMessageSent;
 
   const ChatScreen({
     super.key,
@@ -74,7 +74,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (savedToken == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("❗ Token مش موجود")));
+      ).showSnackBar(const SnackBar(content: Text("Token Not Found")));
       return;
     }
 
@@ -94,16 +94,16 @@ class _ChatScreenState extends State<ChatScreen> {
       userIdFromToken = payloadMap['nameid'] as String?;
       print("UserId from token: $userIdFromToken");
     } catch (e) {
-      print("❗ Failed to decode token: $e");
+      print(" Failed to decode token: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❗ فشل في قراءة userId من التوكن")),
+        const SnackBar(content: Text("UserID from token not found")),
       );
       return;
     }
 
     if (userIdFromToken == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❗ userId مش موجود في التوكن")),
+        const SnackBar(content: Text("UserID from token not found")),
       );
       return;
     }
@@ -118,7 +118,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> fetchMessages() async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/Chat/${widget.chatId}",
+      "https://fe4c-45-244-133-30.ngrok-free.app/api/Chat/${widget.chatId}",
     );
 
     try {
@@ -130,9 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       );
 
-      print(
-        "استجابة استرجاع الرسائل: ${response.statusCode} - ${response.body}",
-      );
+      print("Response: ${response.statusCode} - ${response.body}");
 
       if (response.statusCode == 200 && currentUserId != null) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -172,14 +170,14 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       } else {
         print(
-          "❌ فشل في استرجاع الرسائل أو userId مفقود: ${response.statusCode}",
+          " Failed to fetch message or UserId not found: ${response.statusCode}",
         );
       }
     } catch (e) {
-      print("❗ خطأ: $e");
+      print("Error  $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في استرجاع الرسائل: $e")));
+      ).showSnackBar(SnackBar(content: Text("Failed to fetch message: $e")));
     }
   }
 
@@ -189,13 +187,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final url = Uri.parse(
       file != null
-          ? "https://6589-45-244-213-140.ngrok-free.app/api/storage/upload"
-          : "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+          ? "https://fe4c-45-244-133-30.ngrok-free.app/api/storage/upload"
+          : "https://fe4c-45-244-133-30.ngrok-free.app/api/Chat/send-message",
     );
 
     try {
       if (file != null) {
-        print("رفع ملف: ${file.path}");
+        print("Upload File ${file.path}");
         var request =
             http.MultipartRequest('POST', url)
               ..headers['Authorization'] = 'Bearer $token'
@@ -212,19 +210,21 @@ class _ChatScreenState extends State<ChatScreen> {
           fileType = 'audio';
         }
 
-        print("استجابة رفع الملف: ${response.statusCode} - ${response.body}");
+        print(
+          "File upload response: ${response.statusCode} - ${response.body}",
+        );
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           final fileUrl = data['blob']?['fileUrl'];
           if (fileUrl == null) {
-            throw Exception('فشل في استرجاع رابط الملف');
+            throw Exception('FileUrl not found');
           }
-          print("رابط الملف: $fileUrl");
+          print("FileUrl: $fileUrl");
 
           final messageResponse = await http.post(
             Uri.parse(
-              "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+              "https://fe4c-45-244-133-30.ngrok-free.app/api/Chat/send-message",
             ),
             headers: {
               'Authorization': 'Bearer $token',
@@ -238,12 +238,12 @@ class _ChatScreenState extends State<ChatScreen> {
               'fileUrl': fileUrl,
               'attachmentUrl': fileUrl,
               'fileType': fileType,
-              'fileName': fileName,
+              ' fileName': fileName,
             }),
           );
 
           print(
-            "استجابة إرسال الرسالة: ${messageResponse.statusCode} - ${messageResponse.body}",
+            "Send message response: ${messageResponse.statusCode} - ${messageResponse.body}",
           );
 
           if (messageResponse.statusCode == 200) {
@@ -261,15 +261,14 @@ class _ChatScreenState extends State<ChatScreen> {
               _messageController.clear();
               _isWriting = false;
             });
-            // استدعاء الـ callback لتحديث قايمة الشاتات
             widget.onMessageSent?.call();
           } else {
             throw Exception(
-              'فشل في إرسال الرسالة: ${messageResponse.statusCode}',
+              'Faild to send message: ${messageResponse.statusCode}',
             );
           }
         } else {
-          print("❌ فشل في رفع الملف: ${response.statusCode}");
+          print(" File upload failed: ${response.statusCode}");
           print("Body: ${response.body}");
           setState(() {
             messages.add({
@@ -285,7 +284,6 @@ class _ChatScreenState extends State<ChatScreen> {
             _messageController.clear();
             _isWriting = false;
           });
-          // استدعاء الـ callback حتى لو فشل رفع الملف، لكن الرسالة موجودة محليًا
           widget.onMessageSent?.call();
         }
       } else {
@@ -303,11 +301,15 @@ class _ChatScreenState extends State<ChatScreen> {
           }),
         );
 
+        print(
+          "Send message response: ${response.statusCode} - ${response.body}",
+        );
+
         if (response.statusCode == 200) {
           setState(() {
             messages.add({
               'text': text,
-              'isMe': widget.targetUserId != currentUserId,
+              'isMe': true,
               'filePath': null,
               'fileType': null,
               'fileName': null,
@@ -317,18 +319,24 @@ class _ChatScreenState extends State<ChatScreen> {
             _messageController.clear();
             _isWriting = false;
           });
-          // استدعاء الـ callback لتحديث قايمة الشاتات
           widget.onMessageSent?.call();
         } else {
-          print("❌ فشل في إرسال الرسالة: ${response.statusCode}");
+          print("Failed to send message: ${response.statusCode}");
           print("Body: ${response.body}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Failed to send message: ${response.statusCode} - ${response.body}",
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
-      print("❗ خطأ في الإرسال: $e");
+      print("Error: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في إرسال الرسالة: $e")));
+      ).showSnackBar(SnackBar(content: Text("Error sending: $e")));
     }
   }
 
@@ -349,9 +357,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> startRecording() async {
     final micStatus = await Permission.microphone.request();
     if (!micStatus.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❗ لازم تدي صلاحية للمايكروفون")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Mic permission required")));
       return;
     }
 
@@ -367,12 +375,12 @@ class _ChatScreenState extends State<ChatScreen> {
         sampleRate: 44100,
         bitRate: 64000,
       );
-      print("تم بدء التسجيل: $path");
+      print("Recording: $path");
     } catch (e) {
-      print("خطأ في بدء التسجيل: $e");
+      print("Failed to record: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في بدء التسجيل: $e")));
+      ).showSnackBar(SnackBar(content: Text("Failed to record: $e")));
       return;
     }
 
@@ -394,7 +402,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> stopRecording() async {
     try {
       final path = await _recorder!.stopRecorder();
-      print("تم إيقاف التسجيل: $path");
+      print("Stop Recording: $path");
 
       setState(() {
         isRecording = false;
@@ -405,20 +413,20 @@ class _ChatScreenState extends State<ChatScreen> {
       if (path != null) {
         final file = File(path);
         if (await file.exists()) {
-          print("الملف موجود: $path");
+          print("File exists: $path");
           await audioPlayer.play(DeviceFileSource(path));
           await sendMessage(file, path);
         } else {
-          throw Exception("الملف غير موجود: $path");
+          throw Exception("File not exists: $path");
         }
       } else {
-        throw Exception("لم يتم تسجيل أي ملف");
+        throw Exception("File not exists:");
       }
     } catch (e) {
-      print("خطأ في إيقاف التسجيل: $e");
+      print("Error stop recording: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في إيقاف التسجيل: $e")));
+      ).showSnackBar(SnackBar(content: Text("Error stop recording: $e")));
     }
   }
 
@@ -482,7 +490,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void replyToMessage(int index) {
     final message = messages[index];
     setState(() {
-      _messageController.text = "رد على: ${message['text']}\n";
+      _messageController.text = "Replay: ${message['text']}\n";
       selectedMessageIndex = null;
     });
   }
@@ -492,7 +500,7 @@ class _ChatScreenState extends State<ChatScreen> {
     String? newChatId = await _selectChatToForward();
     if (newChatId != null) {
       final url = Uri.parse(
-        "https://6589-45-244-213-140.ngrok-free.app/api/Chat/send-message",
+        "https://fe4c-45-244-133-30.ngrok-free.app/api/Chat/send-message",
       );
 
       try {
@@ -515,17 +523,17 @@ class _ChatScreenState extends State<ChatScreen> {
         );
 
         if (response.statusCode == 200) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("تم إعادة توجيه الرسالة بنجاح")),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Message Forwarded:")));
         } else {
-          throw Exception('فشل في إعادة توجيه الرسالة: ${response.statusCode}');
+          throw Exception('Message Forwarded failed: ${response.statusCode}');
         }
       } catch (e) {
-        print("❗ خطأ في إعادة التوجيه: $e");
+        print("Message Forwarded failed: $e");
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❗ خطأ في إعادة التوجيه: $e")));
+        ).showSnackBar(SnackBar(content: Text("Message Forwarded failed: $e")));
       }
     }
     setState(() {
@@ -569,7 +577,7 @@ class _ChatScreenState extends State<ChatScreen> {
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      print("استجابة تحميل الملف الصوتي: ${response.statusCode}");
+      print("Record upload response: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final dir = await getTemporaryDirectory();
@@ -577,13 +585,13 @@ class _ChatScreenState extends State<ChatScreen> {
             "${dir.path}/temp_audio_${DateTime.now().millisecondsSinceEpoch}.aac";
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
-        print("تم تحميل الملف الصوتي: $filePath");
+        print("تم  file: $filePath");
         return file;
       } else {
-        throw Exception('فشل في تحميل الملف الصوتي: ${response.statusCode}');
+        throw Exception('Failed to upload record: ${response.statusCode}');
       }
     } catch (e) {
-      print("❗ خطأ في تحميل الملف الصوتي: $e");
+      print("Failed to upload record: $e");
       return null;
     }
   }
@@ -591,9 +599,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> transcribeMessage(int index) async {
     final message = messages[index];
     if (message['filePath'] == null || !message['fileType'].contains('audio')) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("❗ هذه الرسالة ليست صوتية")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("This message is not a record:")),
+      );
       return;
     }
 
@@ -601,7 +609,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (message['localPath'] != null &&
         File(message['localPath']).existsSync()) {
       audioFile = File(message['localPath']);
-      print("استخدام الملف المحلي: ${message['localPath']}");
+      print("LocalPath ${message['localPath']}");
     } else {
       audioFile = await downloadAudioFile(message['filePath']);
       if (audioFile != null) {
@@ -612,9 +620,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (audioFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❗ فشل في تحميل الملف الصوتي")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to upload record:")));
       setState(() {
         selectedMessageIndex = null;
       });
@@ -622,7 +630,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     final url = Uri.parse(transcribeEndpoint);
-    print("محاولة الاتصال بالـ API: $url مع الملف: ${audioFile.path}");
+    print("API connect $url with file: ${audioFile.path}");
     try {
       var request =
           http.MultipartRequest('POST', url)
@@ -634,50 +642,48 @@ class _ChatScreenState extends State<ChatScreen> {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      print("استجابة Transcribe: ${response.statusCode} - ${response.body}");
+      print("Response Transcribe: ${response.statusCode} - ${response.body}");
 
       if (response.statusCode == 200) {
         final decodedBody = utf8.decode(response.bodyBytes);
         final data = jsonDecode(decodedBody);
-        final transcribedText = data['text'] ?? 'لا يوجد نص مستخرج';
-        print("النص المستخرج بعد التحويل: $transcribedText");
+        final transcribedText = data['text'] ?? 'no text:';
+        print("TranscribedText: $transcribedText");
         setState(() {
           messages[index]['transcribedText'] = transcribedText;
           selectedMessageIndex = null;
         });
       } else {
         throw Exception(
-          'فشل في استخراج النص: ${response.statusCode} - ${response.body}',
+          'Failed to transcribe: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      print("❗ خطأ في Transcribe: $e");
+      print("Failed to transcribe: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في استخراج النص: $e")));
+      ).showSnackBar(SnackBar(content: Text("Failed to transcribe: $e")));
       setState(() {
         selectedMessageIndex = null;
       });
     } finally {
       if (audioFile.existsSync()) {
         await audioFile.delete();
-        print("تم حذف الملف المؤقت: ${audioFile.path}");
+        print("file deleted: ${audioFile.path}");
       }
     }
   }
 
   Future<void> textToSpeech(int index) async {
     final message = messages[index];
-    print("محتويات الرسالة المختارة: $message");
+    print("Selected text content $message");
     final textToConvert = message['text']?.trim() ?? '';
 
-    print("قيمة النص قبل التحويل: $textToConvert");
+    print("Text before convert:$textToConvert");
 
     if (textToConvert.isEmpty || message['fileType'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("❗ هذه الرسالة لا تحتوي على نص صالح أو ليست نصية"),
-        ),
+        const SnackBar(content: Text("This message is not a text message")),
       );
       setState(() {
         selectedMessageIndex = null;
@@ -687,10 +693,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final url = Uri.parse(textToSpeechEndpoint);
     final body = {'text': textToConvert};
-    print("الـ Body قبل الإرسال: ${jsonEncode(body)}");
-    print(
-      "محاولة الاتصال بالـ API Text-to-Speech: $url مع النص: $textToConvert",
-    );
+    print("Body before sending: ${jsonEncode(body)}");
+    print("Connect API Text-to-Speech: $url with text: $textToConvert");
 
     var request =
         http.MultipartRequest('POST', url)
@@ -700,13 +704,13 @@ class _ChatScreenState extends State<ChatScreen> {
             'Content-Type': 'application/x-www-form-urlencoded',
           });
 
-    print("الطلب الكامل: ${request.toString()}");
+    print("Request: ${request.toString()}");
     try {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
       print(
-        "استجابة Text-to-Speech: ${response.statusCode} - ${response.body}",
+        "Text-to-Speech Response: ${response.statusCode} - ${response.body}",
       );
 
       if (response.statusCode == 200) {
@@ -716,7 +720,7 @@ class _ChatScreenState extends State<ChatScreen> {
               "${dir.path}/temp_speech_${DateTime.now().millisecondsSinceEpoch}.mp3";
           final file = File(filePath);
           await file.writeAsBytes(response.bodyBytes);
-          print("تم حفظ الملف الصوتي: $filePath");
+          print("Record saved: $filePath");
           setState(() {
             messages[index]['audioPath'] = filePath;
             selectedMessageIndex = null;
@@ -726,26 +730,26 @@ class _ChatScreenState extends State<ChatScreen> {
           final data = jsonDecode(response.body);
           final audioUrl = data['audioUrl'] ?? data['url'];
           if (audioUrl != null) {
-            print("رابط الصوت: $audioUrl");
+            print("AudioUrl:$audioUrl");
             setState(() {
               messages[index]['audioPath'] = audioUrl;
               selectedMessageIndex = null;
             });
             await audioPlayer.play(UrlSource(audioUrl));
           } else {
-            throw Exception('لا يوجد رابط صوتي في الاستجابة');
+            throw Exception('Record not found:');
           }
         }
       } else {
         throw Exception(
-          'فشل في تحويل النص لصوت: ${response.statusCode} - ${response.body}',
+          'Text-to-Speech Failed: ${response.statusCode} - ${response.body}',
         );
       }
     } catch (e) {
-      print("❗ خطأ في Text-to-Speech: $e");
+      print("Text-to-Speech Failed:$e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في تحويل النص لصوت: $e")));
+      ).showSnackBar(SnackBar(content: Text("Text-to-Speech Failed: $e")));
       setState(() {
         selectedMessageIndex = null;
       });
@@ -755,7 +759,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void pinMessage(int index) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text("تم تثبيت الرسالة")));
+    ).showSnackBar(const SnackBar(content: Text("Message pinned")));
     setState(() {
       selectedMessageIndex = null;
     });
@@ -789,7 +793,13 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.forward, color: Colors.black),
+                    icon: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.rotationY(
+                        3.1416,
+                      ), // Mirror horizontally
+                      child: const Icon(Icons.reply, color: Colors.black),
+                    ),
                     onPressed: () {
                       forwardMessage(selectedMessageIndex!);
                     },
@@ -848,7 +858,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               )
               : AppBar(
-                backgroundColor: const Color(0xFFFDF1EB),
+                backgroundColor: Colors.white,
                 elevation: 1,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -879,7 +889,10 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           const Text(
                             "Online",
-                            style: TextStyle(color: Colors.green, fontSize: 15),
+                            style: TextStyle(
+                              color: Color.fromARGB(226, 249, 77, 34),
+                              fontSize: 15,
+                            ),
                           ),
                         ],
                       ),
@@ -901,139 +914,161 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ],
               ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                return Align(
-                  alignment:
-                      message['isMe']
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                  child: GestureDetector(
-                    onLongPress: () {
-                      setState(() {
-                        selectedMessageIndex = index;
-                      });
-                    },
-                    child: ChatBubble(
-                      message: message['text'],
-                      filePath: message['filePath'],
-                      fileType: message['fileType'],
-                      fileName: message['fileName'],
-                      isMe: message['isMe'],
-                      isSelected: selectedMessageIndex == index,
-                      transcribedText: message['transcribedText'],
-                      audioPath: message['audioPath'],
-                    ),
-                  ),
-                );
-              },
-            ),
+          Positioned.fill(
+            child: Image.asset('assets/image.png', fit: BoxFit.cover),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.insert_emoticon, color: Colors.grey),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: TextField(
-                            controller: _messageController,
-                            onChanged: (value) {
-                              setState(() {
-                                _isWriting = value.trim().isNotEmpty;
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              hintText: "Message",
-                              border: InputBorder.none,
+          Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    return Align(
+                      alignment:
+                          message['isMe']
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                      child: GestureDetector(
+                        onLongPress: () {
+                          setState(() {
+                            selectedMessageIndex = index;
+                          });
+                        },
+                        child: ChatBubble(
+                          message: message['text'],
+                          filePath: message['filePath'],
+                          fileType: message['fileType'],
+                          fileName: message['fileName'],
+                          isMe: message['isMe'],
+                          isSelected: selectedMessageIndex == index,
+                          transcribedText: message['transcribedText'],
+                          audioPath: message['audioPath'],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 15,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.insert_emoticon,
+                              color: Colors.grey,
                             ),
-                          ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: TextField(
+                                controller: _messageController,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isWriting = value.trim().isNotEmpty;
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                  hintText: "Message",
+                                  border: InputBorder.none,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.attach_file,
+                                color: Colors.grey,
+                              ),
+                              onPressed: showAttachmentOptions,
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt_outlined,
+                                color: Colors.grey,
+                              ),
+                              onPressed: pickFromCamera,
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.attach_file,
-                            color: Colors.grey,
-                          ),
-                          onPressed: showAttachmentOptions,
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.camera_alt_outlined,
-                            color: Colors.grey,
-                          ),
-                          onPressed: pickFromCamera,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    if (_isWriting) {
-                      sendMessage();
-                    } else {
-                      setState(() {
-                        isMicMode = !isMicMode;
-                      });
-                    }
-                  },
-                  onLongPress: () async {
-                    if (isMicMode) {
-                      if (isRecording) {
-                        await stopRecording();
-                      } else {
-                        await startRecording();
-                      }
-                    } else {
-                      try {
-                        final cameras = await availableCameras();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    SignLanguageScreen(cameras: cameras),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("خطأ في تحميل الكاميرا"),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  child: CircleAvatar(
-                    backgroundColor: const Color(0xFFF37C50),
-                    radius: 24,
-                    child: Icon(
-                      _isWriting
-                          ? Icons.send
-                          : (isMicMode ? Icons.mic : Icons.videocam),
-                      color: Colors.white,
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        if (_isWriting) {
+                          sendMessage();
+                        } else {
+                          setState(() {
+                            isMicMode = !isMicMode;
+                          });
+                        }
+                      },
+                      onLongPress: () async {
+                        if (isMicMode) {
+                          if (isRecording) {
+                            await stopRecording();
+                          } else {
+                            await startRecording();
+                          }
+                        } else {
+                          try {
+                            final cameras = await availableCameras();
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) =>
+                                        SignLanguageScreen(cameras: cameras),
+                              ),
+                            );
+                            if (result != null &&
+                                result is String &&
+                                result.isNotEmpty) {
+                              setState(() {
+                                _messageController.text = result;
+                                _isWriting = true;
+                              });
+                              await sendMessage();
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Failed to launch camera:"),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: Color.fromARGB(226, 249, 77, 34),
+                        radius: 24,
+                        child: Icon(
+                          _isWriting
+                              ? Icons.send
+                              : (isMicMode ? Icons.mic : Icons.videocam),
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1044,6 +1079,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _recorder?.closeRecorder();
     audioPlayer.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 }
@@ -1103,40 +1139,38 @@ class _ChatBubbleState extends State<ChatBubble> {
   Future<void> _playAudio() async {
     try {
       if (widget.filePath != null) {
-        print('محاولة تشغيل: ${widget.filePath}');
+        print('Play: ${widget.filePath}');
         if (widget.filePath!.startsWith('http') ||
             widget.filePath!.startsWith('https')) {
           final response = await http.head(Uri.parse(widget.filePath!));
-          print("فحص الرابط: ${response.statusCode}");
+          print("Check URL: ${response.statusCode}");
           if (response.statusCode != 200) {
-            throw Exception(
-              'الرابط غير صالح أو لا يمكن الوصول إليه: ${response.statusCode}',
-            );
+            throw Exception('Failed url: ${response.statusCode}');
           }
           await audioPlayer.play(UrlSource(widget.filePath!));
         } else if (File(widget.filePath!).existsSync()) {
           await audioPlayer.play(DeviceFileSource(widget.filePath!));
         } else {
-          throw Exception('الملف غير موجود في المسار: ${widget.filePath}');
+          throw Exception('File is not found: ${widget.filePath}');
         }
       } else if (widget.audioPath != null) {
-        print('محاولة تشغيل الصوت الناتج: ${widget.audioPath}');
+        print('Record play: ${widget.audioPath}');
         if (widget.audioPath!.startsWith('http') ||
             widget.audioPath!.startsWith('https')) {
           await audioPlayer.play(UrlSource(widget.audioPath!));
         } else if (File(widget.audioPath!).existsSync()) {
           await audioPlayer.play(DeviceFileSource(widget.audioPath!));
         } else {
-          throw Exception('الملف الصوتي الناتج غير موجود: ${widget.audioPath}');
+          throw Exception('Record is not found: ${widget.audioPath}');
         }
       } else {
-        throw Exception('لا يوجد رابط للملف الصوتي');
+        throw Exception('Record is not found:');
       }
     } catch (e) {
-      print('خطأ في تشغيل الصوت: $e');
+      print('Error playing:$e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في تشغيل الصوت: $e")));
+      ).showSnackBar(SnackBar(content: Text("Error playing: $e")));
     }
   }
 
@@ -1180,7 +1214,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               IconButton(
                 icon: Icon(
                   isPlaying ? Icons.pause : Icons.play_arrow,
-                  color: widget.isMe ? Colors.black : Colors.grey[700],
+                  color: widget.isMe ? Colors.white : Colors.black,
                 ),
                 onPressed: () async {
                   if (isPlaying) {
@@ -1194,7 +1228,7 @@ class _ChatBubbleState extends State<ChatBubble> {
               Text(
                 widget.fileName ?? 'Voice Message',
                 style: TextStyle(
-                  color: widget.isMe ? Colors.black : Colors.grey[700],
+                  color: widget.isMe ? Colors.white : Colors.black,
                 ),
               ),
             ],
@@ -1206,7 +1240,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                 widget.transcribedText!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: widget.isMe ? Colors.black54 : Colors.grey[600],
+                  color: widget.isMe ? Colors.white : Colors.black,
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -1223,7 +1257,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             child: Text(
               widget.fileName!,
               style: TextStyle(
-                color: widget.isMe ? Colors.black : Colors.grey[700],
+                color: widget.isMe ? Colors.white : Colors.black,
               ),
             ),
           ),
@@ -1242,7 +1276,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
           ),
           const SizedBox(width: 8),
-          const Text('يتم التسجيل...'),
+          const Text('Recording...'),
         ],
       );
     } else {
@@ -1254,7 +1288,7 @@ class _ChatBubbleState extends State<ChatBubble> {
             widget.message ?? '',
             style: TextStyle(
               fontSize: 15,
-              color: widget.isMe ? Colors.black : Colors.grey[700],
+              color: widget.isMe ? Colors.white : Colors.black,
             ),
           ),
           if (widget.audioPath != null)
@@ -1266,7 +1300,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                   IconButton(
                     icon: Icon(
                       isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: widget.isMe ? Colors.black : Colors.grey[700],
+                      color: widget.isMe ? Colors.white : Colors.black,
                     ),
                     onPressed: () async {
                       if (isPlaying) {
@@ -1277,7 +1311,7 @@ class _ChatBubbleState extends State<ChatBubble> {
                     },
                   ),
                   const SizedBox(width: 4),
-                  const Text('تشغيل الصوت'),
+                  const Text('Play Record'),
                 ],
               ),
             ),
@@ -1296,8 +1330,8 @@ class _ChatBubbleState extends State<ChatBubble> {
             widget.isSelected
                 ? Colors.grey[400]
                 : widget.isMe
-                ? const Color(0xFFF8E2D3)
-                : Colors.grey[300],
+                ? const Color(0xffee8d71)
+                : Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(12),
           topRight: const Radius.circular(12),

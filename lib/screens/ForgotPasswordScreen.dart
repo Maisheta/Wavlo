@@ -19,16 +19,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final email = emailController.text.trim();
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("📧 Please enter your email")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text(" Please enter your email")));
       return;
     }
 
     try {
       final response = await http.post(
         Uri.parse(
-          'https://6589-45-244-213-140.ngrok-free.app/api/Auth/forget-Password',
+          'https://fe4c-45-244-133-30.ngrok-free.app/api/Auth/forget-Password',
         ),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
@@ -43,13 +43,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Failed to send reset code")),
+          const SnackBar(content: Text(" Failed to send reset code")),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("⚠️ Error sending request")));
+      ).showSnackBar(const SnackBar(content: Text(" Error sending request")));
     }
   }
 
@@ -72,7 +72,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xffF37C50),
+                      color: Color(0xfff94e22),
                     ),
                   ),
                 ),
@@ -91,7 +91,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 50),
 
-                // Email Input
                 CustomTextField(
                   label: "Email",
                   onChanged: (value) {
@@ -101,11 +100,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 const SizedBox(height: 30),
 
-                // Send Reset Code button
                 ElevatedButton(
                   onPressed: sendResetCode,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffF37C50),
+                    backgroundColor: const Color(0xfff94e22),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(

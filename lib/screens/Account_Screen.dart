@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chat/screens/verify_screen.dart';
 import '../components/Orange_Circle.dart';
 import '../components/TextField.dart';
@@ -36,9 +38,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> register(BuildContext context) async {
     final url = Uri.parse(
-      'https://6589-45-244-213-140.ngrok-free.app/api/Auth/register',
+      'https://fe4c-45-244-133-30.ngrok-free.app/api/Auth/register',
     );
-
     final request = http.MultipartRequest('POST', url);
 
     request.fields['FirstName'] = firstNameController.text.trim();
@@ -63,28 +64,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final response = await request.send();
       final respStr = await response.stream.bytesToString();
 
-      print("📡 Response Code: ${response.statusCode}");
-      print("📨 Response Body: $respStr");
+      print("📡 Register Response Code: ${response.statusCode}");
+      print("📨 Register Response Body: $respStr");
 
       if (response.statusCode == 200) {
-        // بعد النجاح، يتم التوجيه إلى صفحة VerifyScreen
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => VerifyScreen(email: emailController.text.trim()),
-          ),
-        );
+        final responseData = jsonDecode(respStr);
+        String? token =
+            responseData['token'] ??
+            responseData['accessToken'] ??
+            responseData['jwt'] ??
+            responseData['authToken'] ??
+            responseData['data']?['token'] ??
+            responseData['data']?['accessToken'];
+
+        if (token == null) {
+          print("❌ No token found in response. Full response: $responseData");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error: No token in response')),
+            );
+          }
+          return;
+        }
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        final savedToken = prefs.getString('token');
+        print("✅ Token saved: $savedToken");
+
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => VerifyScreen(email: emailController.text.trim()),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("❌ Failed: $respStr")));
+        print(
+          "❌ Registration failed. Status: ${response.statusCode}, Body: $respStr",
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: $respStr')),
+          );
+        }
       }
     } catch (e) {
-      print("❌ Exception: $e");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Something went wrong!")));
+      print("❌ Register Exception: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Something went wrong!')));
+      }
     }
   }
 
@@ -108,7 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xffF37C50),
+                      color: Color(0xfff94e22),
                     ),
                   ),
                 ),
@@ -173,7 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     register(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffF37C50),
+                    backgroundColor: const Color(0xfff94e22),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
@@ -189,14 +222,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Login_Screen(),
-                          ),
-                        );
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Login_Screen(),
+                        ),
+                      );
                     },
                     child: const Text(
                       "Already have an account",

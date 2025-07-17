@@ -5,7 +5,7 @@ class TextFieldDecoration {
     return InputDecoration(
       labelText: label,
       filled: true,
-      fillColor: const Color(0xffF37C50).withOpacity(0.08), // لون الخلفية ثابت
+      fillColor: const Color(0xfff94e22).withOpacity(0.08), // لون الخلفية ثابت
       border: _borderStyle(),
       focusedBorder: _borderStyle(width: 2.5),
     );
@@ -14,7 +14,7 @@ class TextFieldDecoration {
   static OutlineInputBorder _borderStyle({double width = 2}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: BorderSide(color: const Color(0xffF37C50), width: width),
+      borderSide: BorderSide(color: const Color(0xfff94e22), width: width),
     );
   }
 }

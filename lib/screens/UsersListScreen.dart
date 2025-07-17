@@ -15,6 +15,7 @@ class UsersListScreen extends StatefulWidget {
 class _UsersListScreenState extends State<UsersListScreen> {
   List<dynamic> users = [];
   bool isLoading = true;
+  final String baseUrl = "https://fe4c-45-244-133-30.ngrok-free.app";
 
   @override
   void initState() {
@@ -23,9 +24,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
   }
 
   Future<void> fetchUsers() async {
-    final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/chat/users",
-    );
+    final url = Uri.parse("$baseUrl/api/chat/users");
 
     try {
       final response = await http.get(
@@ -42,13 +41,14 @@ class _UsersListScreenState extends State<UsersListScreen> {
         setState(() {
           users = jsonDecode(response.body);
           isLoading = false;
+          print("Users data: $users");
         });
       } else {
         setState(() {
           isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Failed: ${response.reasonPhrase}")),
+          SnackBar(content: Text(" Failed: ${response.reasonPhrase}")),
         );
       }
     } catch (e) {
@@ -58,28 +58,25 @@ class _UsersListScreenState extends State<UsersListScreen> {
         });
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("❗ Error: $e")));
+        ).showSnackBar(SnackBar(content: Text(" Error: $e")));
       }
     }
   }
 
-  // دالة مساعدة لتحويل الاسم إلى جزأين فقط
   String formatNameToTwoParts(
     String? name,
     String? firstName,
     String? lastName,
   ) {
-    // إذا كان name موجودًا، نقسمه إلى أجزاء ونأخذ أول جزأين فقط
     if (name != null && name.trim().isNotEmpty) {
       final nameParts = name.trim().split(RegExp(r'\s+'));
       if (nameParts.length == 1) {
-        return nameParts[0]; // إذا كان جزء واحد فقط
+        return nameParts[0];
       } else if (nameParts.length >= 2) {
-        return "${nameParts[0]} ${nameParts[1]}"; // أول جزأين فقط
+        return "${nameParts[0]} ${nameParts[1]}";
       }
     }
 
-    // إذا لم يكن name موجودًا، نستخدم firstName وlastName
     final formattedFirstName = (firstName ?? '').trim();
     final formattedLastName = (lastName ?? '').trim();
     if (formattedFirstName.isEmpty && formattedLastName.isEmpty) {
@@ -100,7 +97,7 @@ class _UsersListScreenState extends State<UsersListScreen> {
     String lastName,
   ) async {
     final url = Uri.parse(
-      "https://6589-45-244-213-140.ngrok-free.app/api/chat/create-private-chat?userId=$targetUserId&name=$targetUserName",
+      "$baseUrl/api/chat/create-private-chat?userId=$targetUserId&name=$targetUserName",
     );
 
     try {
@@ -118,7 +115,6 @@ class _UsersListScreenState extends State<UsersListScreen> {
         final chatData = jsonDecode(response.body);
         String chatId = chatData['chatId'].toString();
 
-        // الانتقال إلى شاشة الشات مع تمرير الاسم المكون من جزأين
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -138,27 +134,28 @@ class _UsersListScreenState extends State<UsersListScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Failed to create chat: ${response.body}")),
+          SnackBar(content: Text(" Failed to create chat: ${response.body}")),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ Error: $e")));
+      ).showSnackBar(SnackBar(content: Text(" Error: $e")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 1,
+        iconTheme: const IconThemeData(color: Color(0xfff94e22)),
         title: const Text(
           "Registered Users",
           style: TextStyle(
             fontSize: 22,
-            color: Color(0xffF37C50),
+            color: Color(0xfff94e22),
             fontWeight: FontWeight.bold,
             fontFamily: "ADLaMDisplay",
           ),
@@ -174,28 +171,39 @@ class _UsersListScreenState extends State<UsersListScreen> {
                 itemBuilder: (context, index) {
                   final user = users[index];
 
-                  // بناء الاسم باستخدام الدالة المساعدة
                   String displayName = formatNameToTwoParts(
                     user['name'],
                     user['firstName'],
                     user['lastName'],
                   );
 
+                  final String userImage =
+                      user['profileImage'] != null
+                          ? '$baseUrl${user['profileImage'].startsWith('/') ? user['profileImage'] : '/${user['profileImage']}'}'
+                          : user['imageUrl'] != null
+                          ? '$baseUrl${user['imageUrl'].startsWith('/') ? user['imageUrl'] : '/${user['imageUrl']}'}'
+                          : 'https://randomuser.me/api/portraits/men/1.jpg';
+
+                  print("User Image URL: $userImage");
+
                   return ListTile(
                     leading: CircleAvatar(
                       radius: 30,
-                      backgroundImage: NetworkImage(
-                        user['imageUrl'] ??
-                            'https://randomuser.me/api/portraits/men/${index % 100}.jpg',
-                      ),
+                      backgroundColor: Colors.grey[200],
+                      backgroundImage: NetworkImage(userImage),
+                      onBackgroundImageError: (exception, stackTrace) {
+                        print(
+                          "Error loading image for ${user['name']}: $exception",
+                        );
+                      },
                     ),
                     title: Text(displayName),
                     subtitle: Text(user['email'] ?? "No email"),
                     onTap: () {
                       createPrivateChat(
                         user['id'].toString(),
-                        displayName, // تمرير الاسم المكون من جزأين
-                        user['imageUrl'] ?? '',
+                        displayName,
+                        userImage,
                         user['firstName'] ?? '',
                         user['lastName'] ?? '',
                       );

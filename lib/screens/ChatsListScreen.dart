@@ -25,7 +25,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   String? token;
   String? userId;
 
-  final String baseUrl = "https://6589-45-244-213-140.ngrok-free.app";
+  final String baseUrl = "https://fe4c-45-244-133-30.ngrok-free.app";
 
   @override
   void initState() {
@@ -108,10 +108,10 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
         });
       }
     } catch (e) {
-      print("❗ خطأ في استرجاع الشاتات: $e");
+      print("Failed to load chats: $e");
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❗ خطأ في استرجاع الشاتات: $e")));
+      ).showSnackBar(SnackBar(content: Text("Failed to load chats: $e")));
       setState(() {
         isLoading = false;
       });
@@ -148,13 +148,13 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
         "Wavlo",
         style: TextStyle(
           fontSize: 22,
-          color: Color(0xffF37C50),
+          color: Color(0xfff94e22),
           fontWeight: FontWeight.bold,
           fontFamily: "ADLaMDisplay",
         ),
       ),
       actions: [
-        const Icon(Icons.search, color: Color(0xffF37C50)),
+        const Icon(Icons.search, color: Color(0xfff94e22)),
         const SizedBox(width: 10),
         Theme(
           data: ThemeData(
@@ -162,7 +162,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
           ),
           child: PopupMenuButton<String>(
             offset: const Offset(-18, 40),
-            icon: const Icon(Icons.more_vert, color: Color(0xffF37C50)),
+            icon: const Icon(Icons.more_vert, color: Color(0xfff94e22)),
             onSelected: (value) {
               switch (value) {
                 case 'Setting':
@@ -208,9 +208,10 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             indicator: BoxDecoration(
-              color: Color(0xffF37C50),
+              color: Color(0xfff94e22),
               borderRadius: BorderRadius.all(Radius.circular(30)),
             ),
+            indicatorSize: TabBarIndicatorSize.tab,
             tabs: [
               Tab(child: Center(child: Text("All Chats"))),
               Tab(child: Center(child: Text("Status"))),
@@ -283,7 +284,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
                 formatEgyptTime(lastMessageTime),
                 style: TextStyle(
                   color:
-                      unreadCount > 0 ? const Color(0xffF37C50) : Colors.grey,
+                      unreadCount > 0 ? const Color(0xfff94e22) : Colors.grey,
                 ),
               ),
               if (unreadCount > 0)
@@ -327,7 +328,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
 
   String formatLastMessage(Map<String, dynamic> chat) {
     final senderId = chat['lastMessageSenderId'];
-    final message = chat['lastMessage'] ?? 'لا توجد رسائل';
+    final message = chat['lastMessage'] ?? 'No Message';
 
     if (senderId == null || userId == null) return message;
 
@@ -346,27 +347,25 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   }
 
   String formatEgyptTime(String? utcString) {
-    if (utcString == null || utcString.isEmpty) return 'غير متاح';
+    if (utcString == null || utcString.isEmpty) return 'Unavailable';
 
     try {
-      // تحويل النص لـ DateTime (UTC)
       DateTime utcTime = DateTime.parse(utcString);
 
-      // إضافة فرق التوقيت (مصر عادةً +2 ساعة عن UTC)
       final egyptTime = utcTime.add(const Duration(hours: 0));
 
       final now = DateTime.now().toUtc().add(const Duration(hours: 2));
 
       if (isSameDay(egyptTime, now)) {
-        return DateFormat('hh:mm a').format(egyptTime); // استخدام am/pm
+        return DateFormat('hh:mm a').format(egyptTime);
       } else if (isSameDay(egyptTime, now.subtract(const Duration(days: 1)))) {
         return 'Yesterday';
       } else {
         return DateFormat('dd/MM/yyyy').format(egyptTime);
       }
     } catch (e) {
-      print("خطأ في تحليل الوقت: $e");
-      return 'غير متاح';
+      print("Error: $e");
+      return 'Unavailable';
     }
   }
 
@@ -395,7 +394,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
           const SizedBox(height: 16),
         ],
         FloatingActionButton(
-          backgroundColor: const Color(0xffF37C50),
+          backgroundColor: Color(0xfff94e22),
           onPressed: toggleFab,
           shape: const CircleBorder(),
           child: Icon(
@@ -415,7 +414,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
     return FloatingActionButton(
       heroTag: heroTag,
       mini: true,
-      backgroundColor: const Color(0xffF37C50),
+      backgroundColor: Color(0xfff94e22),
       onPressed: onPressed ?? () {},
       child: Icon(icon, color: Colors.white),
     );

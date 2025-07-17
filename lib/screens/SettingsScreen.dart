@@ -16,7 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _lastName = '';
   String _email = '';
   String _profileImageUrl = '';
-  final String baseUrl = "https://6589-45-244-213-140.ngrok-free.app";
+  final String baseUrl = "https://fe4c-45-244-133-30.ngrok-free.app";
   final String defaultImage = "https://randomuser.me/api/portraits/men/1.jpg";
   String? token;
   String? userId;
@@ -32,7 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     token = prefs.getString('token');
     userId = prefs.getString('userId');
 
-    // جلب القيم المحفوظة أولاً
     setState(() {
       _firstName = prefs.getString('firstName') ?? '';
       _lastName = prefs.getString('lastName') ?? '';
@@ -46,13 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : defaultImage;
     });
 
-    // جلب بيانات المستخدم من الـ API إذا كان فيه token و userId
     if (token != null && userId != null) {
       try {
         final response = await http.get(
-          Uri.parse(
-            "$baseUrl/api/auth/me",
-          ), // غيرنا الـ endpoint لتجربة /api/auth/me
+          Uri.parse("$baseUrl/api/auth/me"),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',
@@ -81,10 +77,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    print("👤 First Name: $_firstName");
-    print("👤 Last Name: $_lastName");
-    print("👤 Profile Image: ${prefs.getString('profileImage')}");
-    print("👤 Profile Image URL: $_profileImageUrl");
+    print(" First Name: $_firstName");
+    print(" Last Name: $_lastName");
+    print(" Profile Image: ${prefs.getString('profileImage')}");
+    print(" Profile Image URL: $_profileImageUrl");
   }
 
   @override
@@ -92,17 +88,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF37C50),
+        backgroundColor: const Color(0xfff94e22),
         elevation: 0,
-        title: const Text('Setting'),
+        title: const Text(
+          'Setting',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         actions: const [
-          Icon(Icons.search),
+          Icon(Icons.search, color: Colors.white),
           SizedBox(width: 16),
-          Icon(Icons.more_vert),
+          Icon(Icons.more_vert, color: Colors.white),
           SizedBox(width: 16),
         ],
       ),
@@ -141,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.qr_code, color: Color(0xFFF37C50)),
+              const Icon(Icons.qr_code, color: Color(0xfff94e22)),
             ],
           ),
           const SizedBox(height: 20),
@@ -193,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, color: const Color(0xFFF37C50)),
+          leading: Icon(icon, color: const Color(0xfff94e22)),
           title: Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.w600),

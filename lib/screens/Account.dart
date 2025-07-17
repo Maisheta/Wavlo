@@ -11,11 +11,14 @@ class AccountPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF37C50),
+        backgroundColor: const Color(0xfff94e22),
         elevation: 0,
-        title: const Text('Account'),
+        title: const Text(
+          'Account',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -49,7 +52,7 @@ class AccountPage extends StatelessWidget {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, color: const Color(0xFFF37C50)),
+          leading: Icon(icon, color: const Color(0xfff94e22)),
           title: Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.w400),
@@ -87,7 +90,7 @@ class AccountPage extends StatelessWidget {
                     'Are you sure you want to logout',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFFF37C50),
+                      color: Color(0xfff94e22),
                       fontSize: 18,
                       fontWeight: FontWeight.w500,
                     ),
@@ -99,10 +102,10 @@ class AccountPage extends StatelessWidget {
                       TextButton(
                         onPressed: () async {
                           final prefs = await SharedPreferences.getInstance();
-                          await prefs.clear(); // 🧹 مسح كل البيانات المحفوظة
+                          await prefs.clear();
 
                           if (context.mounted) {
-                            Navigator.of(context).pop(); // يقفل الديالوج
+                            Navigator.of(context).pop();
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
                                 builder: (_) => WelcomeScreen(),
@@ -113,7 +116,7 @@ class AccountPage extends StatelessWidget {
                         child: const Text(
                           'Yes',
                           style: TextStyle(
-                            color: Color(0xFFF37C50),
+                            color: Color(0xfff94e22),
                             fontSize: 16,
                           ),
                         ),
@@ -124,7 +127,7 @@ class AccountPage extends StatelessWidget {
                         child: const Text(
                           'No',
                           style: TextStyle(
-                            color: Color(0xFFF37C50),
+                            color: Color(0xfff94e22),
                             fontSize: 16,
                           ),
                         ),

@@ -13,7 +13,7 @@ class OrangeCircleDecoration extends StatelessWidget {
         width: 550,
         height: 550,
         decoration: BoxDecoration(
-          color: const Color(0xffF37C50).withOpacity(0.1),
+          color: const Color(0xfff94e22).withOpacity(0.1),
           shape: BoxShape.circle,
         ),
       ),
